@@ -4,7 +4,7 @@ package ru.frostman.jadecife.model;
  * @author slukjanov aka Frostman
  */
 public enum MessageType {
-    PING(((byte) 0x00)),
+    PING(((byte) 0x01)),
 
     UNKNOWN(((byte) 0x00));
 

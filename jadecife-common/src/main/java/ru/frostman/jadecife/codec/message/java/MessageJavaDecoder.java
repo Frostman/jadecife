@@ -21,6 +21,7 @@ public class MessageJavaDecoder implements MessageDecoder{
             ObjectInputStream in = new ObjectInputStream(stream);
             result = (T) in.readObject();
             in.close();
+            stream.close();
         } catch (Exception e) {
             //todo log it
             e.printStackTrace();

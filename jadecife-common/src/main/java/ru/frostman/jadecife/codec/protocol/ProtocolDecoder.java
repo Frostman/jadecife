@@ -5,8 +5,8 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
 import ru.frostman.jadecife.model.CodecType;
-import ru.frostman.jadecife.model.Message;
 import ru.frostman.jadecife.model.MessageType;
+import ru.frostman.jadecife.model.PingMessage;
 import ru.frostman.jadecife.model.Version;
 
 /**
@@ -24,9 +24,6 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.DecodingSt
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer, DecodingState state) throws Exception {
-        //todo see this (if it always more than 4 it's very good, iff more than 8 it's COOL!!!
-        System.out.println(buffer.readableBytes());
-
         switch (state) {
             case VERSION:
                 version = Version.fromByte(buffer.readByte());
@@ -43,20 +40,20 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.DecodingSt
                 checkpoint(DecodingState.DATA_SIZE);
             case DATA_SIZE:
                 dataSize = buffer.readInt();
-                if (dataSize < 0) {
+                if (dataSize <= 0) {
                     throw new ProtocolCodecException("Invalid data size");
                 }
 
                 checkpoint(DecodingState.DATA);
             case DATA:
-                // check if dataSize == 0
                 byte[] data = new byte[dataSize];
                 buffer.readBytes(data, 0, data.length);
 
-                Message message = null;
+                //todo pass VERSION and MESSAGE_TYPE to decode method
+                //todo Message message = MessageCodecFactory.getMessageJavaDecoder().decode(data, PingMessage.class);
 
                 try {
-                    return message;
+                    return PingMessage.create();
                 } finally {
                     this.reset();
                 }

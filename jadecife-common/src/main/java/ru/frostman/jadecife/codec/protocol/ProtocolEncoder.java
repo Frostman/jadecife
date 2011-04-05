@@ -10,7 +10,6 @@ import ru.frostman.jadecife.codec.message.MessageCodecException;
 import ru.frostman.jadecife.codec.message.MessageCodecFactory;
 import ru.frostman.jadecife.model.CodecType;
 import ru.frostman.jadecife.model.Message;
-import ru.frostman.jadecife.model.MessageType;
 import ru.frostman.jadecife.model.Version;
 
 /**
@@ -36,7 +35,7 @@ public class ProtocolEncoder extends OneToOneEncoder {
     }
 
     private ChannelBuffer encodeMessage(Message message) throws ProtocolCodecException {
-        byte[] encodedMessage = new byte[0];
+        byte[] encodedMessage = null;
         try {
             encodedMessage = MessageCodecFactory.getMessageJavaEncoder().encode(message);
         } catch (MessageCodecException e) {
@@ -48,9 +47,10 @@ public class ProtocolEncoder extends OneToOneEncoder {
         //todo add options
         buffer.writeByte(Version.VERSION_1.getByteValue());
         buffer.writeByte(CodecType.JAVA_SERIALIZATION.getByteValue());
-        buffer.writeByte(MessageType.UNKNOWN.getByteValue());
+        buffer.writeByte(message.getType().getByteValue());
         //reserved byte
         buffer.writeByte(0xFF);
+        buffer.writeInt(encodedMessage.length);
         buffer.writeBytes(encodedMessage);
 
         return buffer;

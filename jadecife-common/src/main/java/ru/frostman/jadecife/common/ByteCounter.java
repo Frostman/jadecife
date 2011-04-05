@@ -21,7 +21,7 @@ public class ByteCounter extends SimpleChannelUpstreamHandler {
 
     /**
      * Written bytes counter
-      */
+     */
     private final AtomicLong writtenBytes = new AtomicLong();
 
     /**
@@ -59,7 +59,13 @@ public class ByteCounter extends SimpleChannelUpstreamHandler {
 
         System.out.println(id + ctx.getChannel() + " -> sent: " +
                 getWrittenBytes() + "b, recv: " +
-                getReadBytes() + "b");
+                getReadBytes() + "b, ratio: "
+                + getReadBytes() * 1.0 / getWrittenBytes());
+    }
+
+    public void resetCounters() {
+        writtenBytes.set(0);
+        readBytes.set(0);
     }
 
     /**
