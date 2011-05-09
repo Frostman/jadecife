@@ -21,16 +21,14 @@ import java.util.concurrent.Executors;
 public class Server {
     private final InetSocketAddress address;
     private final int ioWorkersNumber;
-    private final int workersNumber;
     private final boolean gzip;
 
     private DefaultChannelGroup channelGroup;
     private ServerChannelFactory serverFactory;
 
-    public Server(InetSocketAddress address, int ioWorkersNumber, int workersNumber, boolean gzip) {
+    public Server(InetSocketAddress address, int ioWorkersNumber, boolean gzip) {
         this.address = address;
         this.ioWorkersNumber = ioWorkersNumber;
-        this.workersNumber = workersNumber;
         this.gzip = gzip;
     }
 

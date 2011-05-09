@@ -31,14 +31,7 @@ public class BaseCommandLineOpts {
             description = "Number of i/o workers",
             validateWith = WorkersValidator.class
     )
-    public int ioWorkers = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
-
-    @Parameter(
-            names = {"-p", "--workers"},
-            description = "Number of workers",
-            validateWith = WorkersValidator.class
-    )
-    public int workers = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    public int ioWorkers = Math.max(1, Runtime.getRuntime().availableProcessors());
 
     @Parameter(
             names = {"-h", "--address"},
@@ -55,7 +48,6 @@ public class BaseCommandLineOpts {
                 .add("loggingLevel", loggingLevel)
                 .add("gzip", gzip)
                 .add("ioworkers", ioWorkers)
-                .add("workers", workers)
                 .add("address", address)
                 .add("parameters", parameters)
                 .toString();

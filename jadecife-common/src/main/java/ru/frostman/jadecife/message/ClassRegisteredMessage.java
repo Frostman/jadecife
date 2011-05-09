@@ -9,13 +9,23 @@ import ru.frostman.jadecife.model.MessageType;
  */
 public class ClassRegisteredMessage extends Message {
 
+    private String name;
     private int classId;
 
     public ClassRegisteredMessage() {
     }
 
-    public ClassRegisteredMessage(int classId) {
+    public ClassRegisteredMessage(String name, int classId) {
+        this.name = name;
         this.classId = classId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getClassId() {

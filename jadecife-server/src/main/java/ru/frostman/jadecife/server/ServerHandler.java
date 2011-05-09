@@ -5,11 +5,13 @@ import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.frostman.jadecife.message.AddTaskFactoryMessage;
 import ru.frostman.jadecife.message.ClassRegisterMessage;
 import ru.frostman.jadecife.message.ClassRegisteredMessage;
 import ru.frostman.jadecife.message.PingMessage;
 import ru.frostman.jadecife.model.ClassEntry;
 import ru.frostman.jadecife.model.Message;
+import ru.frostman.jadecife.task.TaskFactory;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,8 +49,16 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
                     break;
                 case CLASS_REGISTER:
                     int id = registeredClassId.getAndIncrement();
-                    registeredClasses.put(id, ((ClassRegisterMessage) message).getClassEntry());
-                    e.getChannel().write(new ClassRegisteredMessage(id));
+                    ClassEntry entry = ((ClassRegisterMessage) message).getClassEntry();
+                    registeredClasses.put(id, entry);
+                    e.getChannel().write(new ClassRegisteredMessage(entry.getName(), id));
+                    break;
+                case TASK_FACTORY_ADD:
+                    TaskFactory factory = ((AddTaskFactoryMessage) message).getFactory();
+                    if (factory != null && factory.hasNext()) {
+                        System.out.println(factory);
+                    }
+                    //todo register factory and send it's id to client
                     break;
             }
 
@@ -59,7 +69,7 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        log.warn("Exception in ServerHandler ", e);
+        log.warn("Exception in ServerHandler ", e.getCause());
 
         e.getChannel().close();
     }

@@ -1,11 +1,14 @@
 package ru.frostman.jadecife.task;
 
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * @author slukjanov aka Frostman
  */
 public abstract class TaskFactory implements Iterable<Task> {
+
+    public abstract Set<Integer> neededClasses();
 
     public abstract boolean hasNext();
 

@@ -11,6 +11,7 @@
         <module>jadecife-common</module>
         <module>jadecife-server</module>
         <module>jadecife-fake-client</module>
+        <module>jadecife-client</module>
     </modules>
 
     <name>jadecife-parent</name>

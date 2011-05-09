@@ -5,7 +5,7 @@ import java.util.HashMap;
 /**
  * @author slukjanov aka Frostman
  */
-enum LoggingLevel {
+public enum LoggingLevel {
     TRACE,
     DEBUG,
     INFO,
