@@ -1,5 +1,7 @@
 package ru.frostman.jadecife.model;
 
+import ru.frostman.jadecife.message.ClassRegisterMessage;
+import ru.frostman.jadecife.message.ClassRegisteredMessage;
 import ru.frostman.jadecife.message.PingMessage;
 
 /**
@@ -7,6 +9,8 @@ import ru.frostman.jadecife.message.PingMessage;
  */
 public enum MessageType {
     PING(((byte) 0x01), PingMessage.class),
+    CLASS_REGISTER(((byte) 0x02), ClassRegisterMessage.class),
+    CLASS_REGISTERED(((byte) 0x03), ClassRegisteredMessage.class),
 
     UNKNOWN(((byte) 0x00), null);
 

@@ -1,0 +1,34 @@
+package ru.frostman.jadecife.message;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+import ru.frostman.jadecife.model.Message;
+import ru.frostman.jadecife.model.MessageType;
+
+/**
+ * @author slukjanov aka Frostman
+ */
+public class ClassRegisteredMessage extends Message {
+
+    private int classId;
+
+    public ClassRegisteredMessage() {
+    }
+
+    public ClassRegisteredMessage(int classId) {
+        this.classId = classId;
+    }
+
+    public int getClassId() {
+        return classId;
+    }
+
+    public void setClassId(int classId) {
+        this.classId = classId;
+    }
+
+    @JsonIgnore
+    @Override
+    public MessageType getType() {
+        return MessageType.CLASS_REGISTERED;
+    }
+}
