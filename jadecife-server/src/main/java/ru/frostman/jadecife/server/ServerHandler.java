@@ -2,12 +2,17 @@ package ru.frostman.jadecife.server;
 
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.frostman.jadecife.message.PingMessage;
 import ru.frostman.jadecife.model.Message;
 
 /**
  * @author slukjanov aka Frostman
  */
 public class ServerHandler extends SimpleChannelUpstreamHandler {
+    private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
+
     private final ChannelGroup channelGroup;
 
     public ServerHandler(ChannelGroup channelGroup) {
@@ -20,10 +25,14 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void messageReceived(ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
         if (e.getMessage() instanceof Message) {
-            // echo it...
-            e.getChannel().write(e.getMessage());
+            final PingMessage message = (PingMessage) e.getMessage();
+            message.setCreateTime(2);
+
+            ChannelFuture cf = e.getChannel().write(message);
+
+
         } else {
             super.messageReceived(ctx, e);
         }
@@ -31,9 +40,8 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        //todo log it
-        e.getCause().printStackTrace();
+        log.warn("Exception in ServerHandler ", e);
 
-        //super.exceptionCaught(ctx, e);
+        e.getChannel().close();
     }
 }

@@ -11,8 +11,8 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import ru.frostman.jadecife.codec.protocol.ProtocolDecoder;
 import ru.frostman.jadecife.codec.protocol.ProtocolEncoder;
 import ru.frostman.jadecife.common.ByteCounter;
+import ru.frostman.jadecife.message.PingMessage;
 import ru.frostman.jadecife.model.Message;
-import ru.frostman.jadecife.model.PingMessage;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -49,6 +49,10 @@ public class FakeClient implements ClientHandlerListener {
     @Override
     public void messageReceived(Message message) {
         // System.err.println("Received message " + message);
+        if (message instanceof PingMessage) {
+            //System.out.println("on client received: " + ((PingMessage) message).getCreateTime());
+        }
+
         if (this.received.incrementAndGet() == this.messages) {
             long stopTime = System.currentTimeMillis();
             float timeInSeconds = (stopTime - this.startTime) / 1000f;
@@ -69,12 +73,12 @@ public class FakeClient implements ClientHandlerListener {
                 }.start();
             }
         }
+
     }
 
     public boolean start() {
         // For production scenarios, use limited sized thread pools
-        this.clientFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
-                Executors.newCachedThreadPool());
+        this.clientFactory = new NioClientSocketChannelFactory(Executors.newFixedThreadPool(1), Executors.newFixedThreadPool(1), 1);
         this.channelGroup = new DefaultChannelGroup(this + "-channelGroup");
         this.handler = new ClientHandler(this, this.channelGroup);
         ChannelPipelineFactory pipelineFactory = new ChannelPipelineFactory() {
@@ -83,8 +87,8 @@ public class FakeClient implements ClientHandlerListener {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
                 // Enable stream compression
-                //pipeline.addLast("deflater", new ZlibEncoder(ZlibWrapper.GZIP));
-                //pipeline.addLast("inflater", new ZlibDecoder(ZlibWrapper.GZIP));
+//                pipeline.addLast("deflater", new ZlibEncoder(ZlibWrapper.GZIP));
+//                pipeline.addLast("inflater", new ZlibDecoder(ZlibWrapper.GZIP));
 
                 pipeline.addLast("byteCounter", new ByteCounter("ClientSideByteCounter"));
 
@@ -127,15 +131,23 @@ public class FakeClient implements ClientHandlerListener {
 
         this.startTime = System.currentTimeMillis();
         for (int i = 0; i < this.messages; i++) {
-            this.handler.sendMessage(PingMessage.create());
+            PingMessage pm = new PingMessage();
+            pm.setCreateTime(1);
+            this.handler.sendMessage(pm);
+//            try {
+//                Thread.sleep(1);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 
     // main -----------------------------------------------------------------------------------------------------------
 
     static FakeClient client;
+
     public static void main(String[] args) throws InterruptedException {
-        client = new FakeClient("localhost", 9999, 1000000, 1);
+        client = new FakeClient("localhost", 9999, 100000, 5);
 
         if (!client.start()) {
             System.exit(-1);
@@ -152,6 +164,14 @@ public class FakeClient implements ClientHandlerListener {
                 client.stop();
             }
         });
+
+//        java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+//        com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
+//        long freeMemory = sunmxbean.getFreePhysicalMemorySize();
+//        long availableMemory = sunmxbean.getTotalPhysicalMemorySize();
+//
+//        System.out.println("Free memory: " + freeMemory / 1024 / 1024);
+//        System.out.println("Available memory: " + availableMemory / 1024 / 1024);
     }
 }
 

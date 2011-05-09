@@ -1,4 +1,8 @@
-package ru.frostman.jadecife.model;
+package ru.frostman.jadecife.message;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+import ru.frostman.jadecife.model.Message;
+import ru.frostman.jadecife.model.MessageType;
 
 /**
  * @author slukjanov aka Frostman
@@ -24,6 +28,7 @@ public class PingMessage extends Message {
         this.createTime = createTime;
     }
 
+    @JsonIgnore
     @Override
     public MessageType getType() {
         return MessageType.PING;

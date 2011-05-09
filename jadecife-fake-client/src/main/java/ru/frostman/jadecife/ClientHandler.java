@@ -1,10 +1,6 @@
 package ru.frostman.jadecife;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
 import ru.frostman.jadecife.model.Message;
 
@@ -36,6 +32,13 @@ public class ClientHandler extends SimpleChannelUpstreamHandler {
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         this.channel = e.getChannel();
         this.channelGroup.add(e.getChannel());
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        e.getCause().printStackTrace();
+
+        e.getChannel().close();
     }
 
     public void sendMessage(Message message) {

@@ -1,13 +1,14 @@
 package ru.frostman.jadecife.codec.protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
-import ru.frostman.jadecife.model.CodecType;
-import ru.frostman.jadecife.model.MessageType;
-import ru.frostman.jadecife.model.PingMessage;
-import ru.frostman.jadecife.model.Version;
+import ru.frostman.jadecife.codec.message.MessageCodecFactory;
+import ru.frostman.jadecife.model.*;
+
+import java.io.InputStream;
 
 /**
  * @author slukjanov aka Frostman
@@ -46,14 +47,13 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.DecodingSt
 
                 checkpoint(DecodingState.DATA);
             case DATA:
-                byte[] data = new byte[dataSize];
-                buffer.readBytes(data, 0, data.length);
+                InputStream is = new ChannelBufferInputStream(buffer, dataSize);
 
-                //todo pass VERSION and MESSAGE_TYPE to decode method
-                //todo Message message = MessageCodecFactory.getMessageJavaDecoder().decode(data, PingMessage.class);
+                //todo choose encoder/decoder based on VERSION
+                Message message = MessageCodecFactory.getMessageJsonDecoder().decode(is, messageType.getMessageClass());
 
                 try {
-                    return PingMessage.create();
+                    return message;
                 } finally {
                     this.reset();
                 }

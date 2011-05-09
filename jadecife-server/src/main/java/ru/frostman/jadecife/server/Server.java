@@ -4,29 +4,39 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.codec.compression.ZlibDecoder;
+import org.jboss.netty.handler.codec.compression.ZlibEncoder;
+import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import ru.frostman.jadecife.codec.protocol.ProtocolDecoder;
 import ru.frostman.jadecife.codec.protocol.ProtocolEncoder;
 import ru.frostman.jadecife.common.ByteCounter;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
  * @author slukjanov aka Frostman
  */
 public class Server {
-    private final String host;
-    private final int port;
+    private final InetSocketAddress address;
+    private final int ioWorkersNumber;
+    private final int workersNumber;
+    private final boolean gzip;
+
     private DefaultChannelGroup channelGroup;
     private ServerChannelFactory serverFactory;
 
-    public Server(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public Server(InetSocketAddress address, int ioWorkersNumber, int workersNumber, boolean gzip) {
+        this.address = address;
+        this.ioWorkersNumber = ioWorkersNumber;
+        this.workersNumber = workersNumber;
+        this.gzip = gzip;
     }
 
     public boolean start() {
-        serverFactory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
+        Executor ioWorkersPool = Executors.newFixedThreadPool(ioWorkersNumber + 1);
+        serverFactory = new NioServerSocketChannelFactory(ioWorkersPool, ioWorkersPool, ioWorkersNumber);
         channelGroup = new DefaultChannelGroup(this + "-channelGroup");
 
         ChannelPipelineFactory pipelineFactory = new ChannelPipelineFactory() {
@@ -34,9 +44,10 @@ public class Server {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
-                // Enable stream compression
-                //pipeline.addLast("deflater", new ZlibEncoder(ZlibWrapper.GZIP));
-                //pipeline.addLast("inflater", new ZlibDecoder(ZlibWrapper.GZIP));
+                if (gzip) {
+                    pipeline.addLast("deflater", new ZlibEncoder(ZlibWrapper.GZIP));
+                    pipeline.addLast("inflater", new ZlibDecoder(ZlibWrapper.GZIP));
+                }
 
                 pipeline.addLast("byteCounter", new ByteCounter("ClientSideByteCounter"));
 
@@ -54,7 +65,7 @@ public class Server {
         bootstrap.setOption("child.keepAlive", true);
         bootstrap.setPipelineFactory(pipelineFactory);
 
-        Channel channel = bootstrap.bind(new InetSocketAddress(this.host, this.port));
+        Channel channel = bootstrap.bind(address);
         if (!channel.isBound()) {
             stop();
             return false;
@@ -71,25 +82,6 @@ public class Server {
         if (this.serverFactory != null) {
             this.serverFactory.releaseExternalResources();
         }
-    }
-
-    public static void main(String[] args) {
-        final Server server = new Server("localhost", 9999);
-
-        if (!server.start()) {
-            System.exit(-1);
-            return;
-        }
-
-        System.out.println("Server started...");
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-
-            @Override
-            public void run() {
-                server.stop();
-            }
-        });
     }
 }
 
