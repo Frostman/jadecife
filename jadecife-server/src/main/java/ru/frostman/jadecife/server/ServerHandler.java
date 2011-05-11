@@ -5,10 +5,7 @@ import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.frostman.jadecife.message.AddTaskFactoryMessage;
-import ru.frostman.jadecife.message.ClassRegisterMessage;
-import ru.frostman.jadecife.message.ClassRegisteredMessage;
-import ru.frostman.jadecife.message.PingMessage;
+import ru.frostman.jadecife.message.*;
 import ru.frostman.jadecife.model.ClassEntry;
 import ru.frostman.jadecife.model.Message;
 import ru.frostman.jadecife.task.TaskFactory;
@@ -55,10 +52,12 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
                     break;
                 case TASK_FACTORY_ADD:
                     TaskFactory factory = ((AddTaskFactoryMessage) message).getFactory();
+                    long factoryId = 0;
                     if (factory != null && factory.hasNext()) {
-                        System.out.println(factory);
+                        TaskManager.addTaskFactory(factory);
+                        factoryId = factory.getId();
                     }
-                    //todo register factory and send it's id to client
+                    e.getChannel().write(new TaskFactoryAddedMessage(factoryId));
                     break;
             }
 

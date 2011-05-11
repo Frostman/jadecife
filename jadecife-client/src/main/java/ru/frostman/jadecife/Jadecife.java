@@ -127,5 +127,7 @@ public class Jadecife implements MessageHandler {
 
     public void addTaskFactory(TaskFactory taskFactory) {
         handler.sendMessage(new AddTaskFactoryMessage(taskFactory));
+        //todo залипнуть ждать респонза, сделать chained методы для добавления классов и фабрик
+
     }
 }

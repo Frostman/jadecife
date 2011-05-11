@@ -7,6 +7,7 @@ import java.util.Set;
  * @author slukjanov aka Frostman
  */
 public abstract class TaskFactory implements Iterable<Task> {
+    private long id;
 
     public abstract Set<Integer> neededClasses();
 
@@ -17,6 +18,14 @@ public abstract class TaskFactory implements Iterable<Task> {
     @Override
     public Iterator<Task> iterator() {
         return new TaskFactoryIterator();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     private final class TaskFactoryIterator implements Iterator<Task>{
