@@ -1,10 +1,10 @@
-package ru.frostman.jadecife.client;
+package ru.frostman.jadecife.message;
 
 import ru.frostman.jadecife.model.Message;
 
 /**
  * @author slukjanov aka Frostman
  */
-interface MessageHandler {
+public interface MessageHandler {
     void messageReceived(Message message);
 }

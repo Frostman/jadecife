@@ -1,4 +1,4 @@
-package ru.frostman.jadecife.client;
+package ru.frostman.jadecife.worker.cli;
 
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -10,14 +10,14 @@ import ru.frostman.jadecife.model.Message;
 /**
  * @author slukjanov aka Frostman
  */
-class ClientHandler extends SimpleChannelUpstreamHandler {
-    private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
+public class WorkerHandler extends SimpleChannelUpstreamHandler {
+    private static final Logger log = LoggerFactory.getLogger(WorkerHandler.class);
 
     private final ChannelGroup channelGroup;
     private final MessageHandler messageHandler;
     private Channel channel;
 
-    public ClientHandler(ChannelGroup channelGroup, MessageHandler messageHandler) {
+    public WorkerHandler(ChannelGroup channelGroup, MessageHandler messageHandler) {
         this.channelGroup = channelGroup;
         this.messageHandler = messageHandler;
     }
@@ -54,5 +54,4 @@ class ClientHandler extends SimpleChannelUpstreamHandler {
 
     public void stop() {
         channel.close();
-    }
-}
+    }}

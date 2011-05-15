@@ -1,6 +1,7 @@
 package ru.frostman.jadecife.server;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -13,6 +14,7 @@ import ru.frostman.jadecife.task.Task;
 import ru.frostman.jadecife.task.TaskFactory;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -22,16 +24,9 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
     private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
 
     private static final AtomicInteger registeredClassId = new AtomicInteger(1);
-
-    private final ChannelGroup channelGroup;
-
-    //todo synchronize it?
-    private final Map<Integer, ClassEntry> registeredClasses = Maps.newHashMap();
-
-    //todo remove it
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private final ClassLoader classLoader = new ClassLoader() {
+    private static final Map<Integer, ClassEntry> registeredClasses = Maps.newHashMap();
+    private static final Map<String, Integer> registeredClassesNames = Maps.newHashMap();
+    private static final ClassLoader classLoader = new ClassLoader() {
         protected Class<?> loadClass(int classId) throws ClassNotFoundException {
             ClassEntry entry = registeredClasses.get(classId);
             String name = entry.getName();
@@ -48,6 +43,10 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
                 return loadClass(Integer.parseInt(name.substring(3)));
             }
 
+            if (registeredClassesNames.containsKey(name)) {
+                return loadClass(registeredClassesNames.get(name));
+            }
+
             try {
                 return ServerHandler.class.getClassLoader().loadClass(name);
             } catch (ClassNotFoundException e) {
@@ -56,6 +55,16 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
         }
     };
 
+    private final ChannelGroup channelGroup;
+
+    //todo remove it
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    /**
+     * Id of classes that sent to workers
+     */
+    private final Set<Integer> sentEntries = Sets.newHashSet();
+
     public ServerHandler(ChannelGroup channelGroup) {
         this.channelGroup = channelGroup;
     }
@@ -63,6 +72,8 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         this.channelGroup.add(e.getChannel());
+
+        log.info("connected: " + e.getChannel());
     }
 
     @Override
@@ -79,6 +90,7 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
                     int id = registeredClassId.getAndIncrement();
                     ClassEntry entry = ((ClassRegisterMessage) message).getClassEntry();
                     registeredClasses.put(id, entry);
+                    registeredClassesNames.put(entry.getName(), id);
                     e.getChannel().write(new ClassRegisteredMessage(entry.getName(), id));
                     break;
                 case TASK_FACTORY_ADD:
@@ -98,10 +110,25 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
                     break;
                 case GET_TASK:
                     Task task = TaskManager.nextTask();
+                    if (task != null) {
+                        TaskFactory taskFactory = task.getFactory();
+                        for (Integer classId : taskFactory.neededClasses()) {
+                            if (sentEntries.contains(classId)) {
+                                continue;
+                            }
+
+                            e.getChannel().write(new ClassEntryMessage(registeredClasses.get(classId), classId));
+                            sentEntries.add(classId);
+                        }
+                    }
                     e.getChannel().write(new RunTaskMessage(task));
                     break;
+                case RUN_RESULT:
+                    RunTaskResultMessage resultMessage = (RunTaskResultMessage) message;
+                    TaskManager.taskInvoked(resultMessage.getTaskId(), resultMessage.getResult());
+                    break;
                 default:
-                    // no operations
+                    log.warn("Unsupported message received: " + message.getType());
                     break;
             }
 

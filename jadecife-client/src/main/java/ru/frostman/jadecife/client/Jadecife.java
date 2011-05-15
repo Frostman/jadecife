@@ -2,7 +2,6 @@ package ru.frostman.jadecife.client;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -19,17 +18,10 @@ import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import ru.frostman.jadecife.JadecifeException;
-import ru.frostman.jadecife.cli.LoggingConfigurator;
-import ru.frostman.jadecife.cli.LoggingLevel;
-import ru.frostman.jadecife.client.test.Test;
-import ru.frostman.jadecife.client.test.TestTaskFactory;
 import ru.frostman.jadecife.codec.protocol.ProtocolDecoder;
 import ru.frostman.jadecife.codec.protocol.ProtocolEncoder;
 import ru.frostman.jadecife.common.ByteCounter;
-import ru.frostman.jadecife.message.AddTaskFactoryMessage;
-import ru.frostman.jadecife.message.ClassRegisterMessage;
-import ru.frostman.jadecife.message.ClassRegisteredMessage;
-import ru.frostman.jadecife.message.TaskFactoryAddedMessage;
+import ru.frostman.jadecife.message.*;
 import ru.frostman.jadecife.model.ClassEntry;
 import ru.frostman.jadecife.model.Message;
 import ru.frostman.jadecife.model.MessageType;
@@ -201,17 +193,5 @@ public class Jadecife implements MessageHandler {
         }
 
         return factoryId[1];
-    }
-
-    public static void main(String[] args) throws JadecifeException {
-        LoggingConfigurator.configure(LoggingLevel.DEBUG);
-        Jadecife jadecife = new Jadecife(2, false, "localhost", 7890);
-        final Map<String, Integer> registeredClasses = jadecife.registerClasses(Test.class, TestTaskFactory.class);
-        System.out.println(registeredClasses);
-        long factoryId = jadecife.addTaskFactory(registeredClasses.get(TestTaskFactory.class.getName())
-                , new TestTaskFactory(Sets.newHashSet(registeredClasses.get(Test.class.getName()))
-                , registeredClasses.get(Test.class.getName())));
-
-        System.out.println("Factory registered with id: " + factoryId);
     }
 }

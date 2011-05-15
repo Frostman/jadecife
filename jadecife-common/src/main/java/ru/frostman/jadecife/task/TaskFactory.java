@@ -9,15 +9,21 @@ import java.util.Set;
 public abstract class TaskFactory implements Iterable<Task> {
     private long id;
 
+    private final TaskFactoryIterator iterator = new TaskFactoryIterator();
+
     public abstract Set<Integer> neededClasses();
 
     public abstract boolean hasNext();
 
     public abstract Task next();
 
+    public abstract Class taskResultType();
+
+    public abstract void taskInvoked(Object result);
+
     @Override
     public Iterator<Task> iterator() {
-        return new TaskFactoryIterator();
+        return iterator;
     }
 
     public long getId() {
@@ -28,7 +34,7 @@ public abstract class TaskFactory implements Iterable<Task> {
         this.id = id;
     }
 
-    private final class TaskFactoryIterator implements Iterator<Task>{
+    private final class TaskFactoryIterator implements Iterator<Task> {
 
         @Override
         public boolean hasNext() {

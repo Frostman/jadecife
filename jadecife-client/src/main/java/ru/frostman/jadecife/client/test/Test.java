@@ -5,7 +5,12 @@ package ru.frostman.jadecife.client.test;
  */
 public class Test {
 
-    public void printTime(long time) {
+    public String printTime(Long time) {
         System.out.println("time: " + time);
+
+        if (time % 2 == 0) {
+            return "OK";
+        }
+        return null;
     }
 }

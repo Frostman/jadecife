@@ -17,6 +17,12 @@ public enum MessageType {
     GET_TASK(((byte) 0x06), GetTaskMessage.class),
     RUN_TASK(((byte) 0x07), RunTaskMessage.class),
 
+    CLASS_ENTRY(((byte) 0x08), ClassEntryMessage.class),
+
+    RUN_ERROR(((byte) 0x09), RunTaskErrorMessage.class),
+
+    RUN_RESULT(((byte) 0x10), RunTaskResultMessage.class),
+
     UNKNOWN(((byte) 0x00), null);
 
     private final byte b;

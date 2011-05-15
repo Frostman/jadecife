@@ -2,6 +2,7 @@ package ru.frostman.jadecife.codec.message.jackson;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import ru.frostman.jadecife.codec.message.MessageCodecException;
 import ru.frostman.jadecife.codec.message.MessageDecoder;
 import ru.frostman.jadecife.codec.message.MessageEncoder;
@@ -18,6 +19,8 @@ public class MessageJacksonCodec implements MessageEncoder, MessageDecoder {
 
     public MessageJacksonCodec() {
         objectMapper = new ObjectMapper();
+
+        objectMapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
     }
 
     public MessageJacksonCodec(JsonFactory factory) {

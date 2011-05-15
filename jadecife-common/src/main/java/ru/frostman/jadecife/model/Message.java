@@ -1,5 +1,7 @@
 package ru.frostman.jadecife.model;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 /**
  * Base class for all messages in system. Each message may
  * be sent/received with auto encoding and auto decoding
@@ -19,5 +21,6 @@ public abstract class Message {
      *
      * @return type of the message
      */
+    @JsonIgnore
     public abstract MessageType getType();
 }

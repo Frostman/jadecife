@@ -34,4 +34,32 @@ public class TestTaskFactory extends TaskFactory {
     public Task next() {
         return new Task(taskClassId, "printTime", new Object[]{System.nanoTime()});
     }
+
+    @Override
+    public Class taskResultType() {
+        return String.class;
+    }
+
+    @Override
+    public void taskInvoked(Object result) {
+        if (result instanceof String) {
+            System.out.println("RESULT: " + result);
+        }
+    }
+
+    public Set<Integer> getNeededClasses() {
+        return neededClasses;
+    }
+
+    public void setNeededClasses(Set<Integer> neededClasses) {
+        this.neededClasses = neededClasses;
+    }
+
+    public int getTaskClassId() {
+        return taskClassId;
+    }
+
+    public void setTaskClassId(int taskClassId) {
+        this.taskClassId = taskClassId;
+    }
 }
