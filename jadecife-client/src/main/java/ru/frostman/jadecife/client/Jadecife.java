@@ -1,6 +1,8 @@
-package ru.frostman.jadecife;
+package ru.frostman.jadecife.client;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -12,25 +14,35 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.channel.socket.oio.OioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 import org.jboss.netty.handler.codec.compression.ZlibWrapper;
+import ru.frostman.jadecife.JadecifeException;
+import ru.frostman.jadecife.cli.LoggingConfigurator;
+import ru.frostman.jadecife.cli.LoggingLevel;
+import ru.frostman.jadecife.client.test.Test;
+import ru.frostman.jadecife.client.test.TestTaskFactory;
 import ru.frostman.jadecife.codec.protocol.ProtocolDecoder;
 import ru.frostman.jadecife.codec.protocol.ProtocolEncoder;
 import ru.frostman.jadecife.common.ByteCounter;
 import ru.frostman.jadecife.message.AddTaskFactoryMessage;
 import ru.frostman.jadecife.message.ClassRegisterMessage;
+import ru.frostman.jadecife.message.ClassRegisteredMessage;
+import ru.frostman.jadecife.message.TaskFactoryAddedMessage;
 import ru.frostman.jadecife.model.ClassEntry;
 import ru.frostman.jadecife.model.Message;
+import ru.frostman.jadecife.model.MessageType;
 import ru.frostman.jadecife.task.TaskFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author slukjanov aka Frostman
@@ -40,10 +52,12 @@ public class Jadecife implements MessageHandler {
     private ChannelGroup channelGroup;
     private ClientHandler handler;
 
+    private MessageHandler currentMessageHandler;
+
     public Jadecife(int threads, final boolean gzip, String host, int port) throws JadecifeException {
         Preconditions.checkArgument(threads >= 2, "Minimum 2 threads needed");
         Executor executor = Executors.newFixedThreadPool(threads);
-        this.clientFactory = new NioClientSocketChannelFactory(executor, executor, threads - 1);
+        this.clientFactory = new OioClientSocketChannelFactory(executor);
         this.channelGroup = new DefaultChannelGroup(this + "-channelGroup");
         this.handler = new ClientHandler(this.channelGroup, this);
         ChannelPipelineFactory pipelineFactory = new ChannelPipelineFactory() {
@@ -91,11 +105,15 @@ public class Jadecife implements MessageHandler {
 
     @Override
     public void messageReceived(Message message) {
-        //todo impl it
-        System.out.println(message);
+        if (currentMessageHandler == null) {
+            System.out.println(message);
+            return;
+        }
+
+        currentMessageHandler.messageReceived(message);
     }
 
-    public void registerClasses(Class... classes) throws JadecifeException {
+    public Map<String, Integer> registerClasses(Class... classes) throws JadecifeException {
         //todo replace default with custom
         ClassPool cp = ClassPool.getDefault();
 
@@ -120,14 +138,80 @@ public class Jadecife implements MessageHandler {
             entries.add(new ClassEntry(clazz.getName(), bytes));
         }
 
+        final Object lock = new Object();
+        final AtomicInteger count = new AtomicInteger(0);
+        final Map<String, Integer> registeredClasses = Maps.newHashMap();
+        currentMessageHandler = new MessageHandler() {
+            @Override
+            public void messageReceived(Message message) {
+                Preconditions.checkState(message.getType() == MessageType.CLASS_REGISTERED);
+                ClassRegisteredMessage registered = (ClassRegisteredMessage) message;
+                registeredClasses.put(registered.getName(), registered.getClassId());
+                count.incrementAndGet();
+
+                synchronized (lock) {
+                    lock.notify();
+                }
+            }
+        };
+
         for (ClassEntry entry : entries) {
             handler.sendMessage(new ClassRegisterMessage(entry));
         }
+
+        while (count.get() < entries.size()) {
+            try {
+                synchronized (lock) {
+                    lock.wait(1000);
+                }
+            } catch (InterruptedException e) {
+                //no operations
+            }
+        }
+
+        return registeredClasses;
     }
 
-    public void addTaskFactory(TaskFactory taskFactory) {
-        handler.sendMessage(new AddTaskFactoryMessage(taskFactory));
-        //todo залипнуть ждать респонза, сделать chained методы для добавления классов и фабрик
+    public long addTaskFactory(int taskFactoryClassId, TaskFactory taskFactory) {
+        final Object lock = new Object();
+        final long[] factoryId = {0, 0};
+        currentMessageHandler = new MessageHandler() {
+            @Override
+            public void messageReceived(Message message) {
+                Preconditions.checkState(message.getType() == MessageType.TASK_FACTORY_ADDED);
+                TaskFactoryAddedMessage added = (TaskFactoryAddedMessage) message;
+                factoryId[0] = 1;
+                factoryId[1] = added.getFactoryId();
+                synchronized (lock) {
+                    lock.notify();
+                }
+            }
+        };
 
+        handler.sendMessage(new AddTaskFactoryMessage(taskFactoryClassId, taskFactory));
+
+        while (factoryId[0] == 0) {
+            synchronized (lock) {
+                try {
+                    lock.wait(1000);
+                } catch (InterruptedException e) {
+                    //no operations
+                }
+            }
+        }
+
+        return factoryId[1];
+    }
+
+    public static void main(String[] args) throws JadecifeException {
+        LoggingConfigurator.configure(LoggingLevel.DEBUG);
+        Jadecife jadecife = new Jadecife(2, false, "localhost", 7890);
+        final Map<String, Integer> registeredClasses = jadecife.registerClasses(Test.class, TestTaskFactory.class);
+        System.out.println(registeredClasses);
+        long factoryId = jadecife.addTaskFactory(registeredClasses.get(TestTaskFactory.class.getName())
+                , new TestTaskFactory(Sets.newHashSet(registeredClasses.get(Test.class.getName()))
+                , registeredClasses.get(Test.class.getName())));
+
+        System.out.println("Factory registered with id: " + factoryId);
     }
 }

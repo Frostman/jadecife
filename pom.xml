@@ -12,6 +12,7 @@
         <module>jadecife-server</module>
         <module>jadecife-fake-client</module>
         <module>jadecife-client</module>
+        <module>jadecife-worker</module>
     </modules>
 
     <name>jadecife-parent</name>
@@ -59,7 +60,7 @@
             <version>1.8.0</version>
         </dependency>
 
-        <!-- Command lone args -->
+        <!-- Command line args -->
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>

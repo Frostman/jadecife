@@ -1,4 +1,4 @@
-package ru.frostman.jadecife;
+package ru.frostman.jadecife.client;
 
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;

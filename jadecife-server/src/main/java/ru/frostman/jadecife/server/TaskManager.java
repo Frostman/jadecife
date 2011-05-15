@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TaskManager {
     private static final AtomicLong currentFactoryId = new AtomicLong(1);
+    private static final AtomicLong currentTaskId = new AtomicLong(1);
+
     private static final LinkedList<TaskFactory> taskFactories = new LinkedList<TaskFactory>();
     private static final LinkedList<Task> rejectedTasks = new LinkedList<Task>();
     private static TaskFactory currentFactory;
@@ -29,7 +31,9 @@ public class TaskManager {
             }
 
             if (currentFactory.hasNext()) {
-                return currentFactory.next();
+                Task task = currentFactory.next();
+                task.setId(currentTaskId.getAndIncrement());
+                return task;
             }
         }
     }

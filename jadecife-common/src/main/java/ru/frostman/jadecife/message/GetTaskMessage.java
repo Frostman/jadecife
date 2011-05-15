@@ -7,7 +7,7 @@ import ru.frostman.jadecife.model.MessageType;
 /**
  * @author slukjanov aka Frostman
  */
-public class GetTaskMessage extends Message{
+public class GetTaskMessage extends Message {
 
     @JsonIgnore
     @Override

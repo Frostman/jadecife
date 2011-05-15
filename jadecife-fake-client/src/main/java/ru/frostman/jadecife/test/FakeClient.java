@@ -1,4 +1,4 @@
-package ru.frostman.jadecife;
+package ru.frostman.jadecife.test;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFactory;

@@ -1,4 +1,4 @@
-package ru.frostman.jadecife;
+package ru.frostman.jadecife.test;
 
 import ru.frostman.jadecife.model.Message;
 

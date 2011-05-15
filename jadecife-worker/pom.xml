@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jadecife-fake-client</artifactId>
+    <artifactId>jadecife-worker</artifactId>
     <packaging>jar</packaging>
 
     <parent>
@@ -11,8 +11,7 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <name>jadecife-fake-client</name>
-    <url>http://jadecife.frostman.ru</url>
+    <name>jadecife-worker</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,7 +34,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.frostman.jadecife.test.FakeClient</mainClass>
+                            <mainClass>ru.frostman.jadecife.worker.WorkerMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
