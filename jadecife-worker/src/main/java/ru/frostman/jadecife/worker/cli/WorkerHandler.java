@@ -47,11 +47,12 @@ public class WorkerHandler extends SimpleChannelUpstreamHandler {
     public ChannelFuture sendMessage(Message message) {
         if (channel != null) {
             return channel.write(message);
-        }else {
+        } else {
             throw new IllegalStateException("Channel == null");
         }
     }
 
     public void stop() {
         channel.close();
-    }}
+    }
+}
